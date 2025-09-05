@@ -1,210 +1,128 @@
 const board = document.getElementById('board');
-const statusText = document.getElementById('status');
-let selectedPiece = null;
-let currentPlayer = 'red';
-
-const directions = {
-  red: [[-1, -1], [-1, 1]],
-  black: [[1, -1], [1, 1]],
-  king: [[-1, -1], [-1, 1], [1, -1], [1, 1]]
-};
+const cells = [];
+const pieces = {};
+let selected = null;
+let turn = 'black';
 
 function createBoard() {
-  board.innerHTML = '';
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       const cell = document.createElement('div');
-      cell.classList.add('cell');
+      cell.classList.add('cell', (row + col) % 2 === 0 ? 'light' : 'dark');
       cell.dataset.row = row;
       cell.dataset.col = col;
-      cell.classList.add((row + col) % 2 === 0 ? 'light' : 'dark');
       board.appendChild(cell);
-
-      if ((row + col) % 2 !== 0) {
-        if (row < 3) addPiece(cell, 'black');
-        if (row > 4) addPiece(cell, 'red');
-      }
+      cells.push(cell);
     }
   }
 }
 
-function addPiece(cell, color) {
-  const piece = document.createElement('div');
-  piece.classList.add('piece', color);
-  piece.draggable = false;
-  cell.appendChild(piece);
+function placePieces() {
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 8; col++) {
+      if ((row + col) % 2 === 1) addPiece(row, col, 'red');
+    }
+  }
+  for (let row = 5; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      if ((row + col) % 2 === 1) addPiece(row, col, 'black');
+    }
+  }
 }
 
-function resetGame() {
-  selectedPiece = null;
-  currentPlayer = 'red';
-  statusText.textContent = "Red's turn";
-  createBoard();
+function addPiece(row, col, color) {
+  const piece = document.createElement('div');
+  piece.classList.add('piece', color);
+  piece.dataset.row = row;
+  piece.dataset.col = col;
+  piece.dataset.color = color;
+  piece.dataset.king = 'false';
+  piece.addEventListener('click', () => selectPiece(piece));
+  getCell(row, col).appendChild(piece);
+  pieces[`${row}-${col}`] = piece;
 }
 
 function getCell(row, col) {
-  return document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+  return cells.find(c => c.dataset.row == row && c.dataset.col == col);
 }
 
-function getPiece(cell) {
-  return cell?.querySelector('.piece');
+function selectPiece(piece) {
+  if (piece.dataset.color !== turn) return;
+  if (selected) selected.classList.remove('selected');
+  selected = piece;
+  selected.classList.add('selected');
 }
 
-function isKing(piece) {
-  return piece?.classList.contains('king');
-}
+function movePiece(toRow, toCol) {
+  const fromRow = parseInt(selected.dataset.row);
+  const fromCol = parseInt(selected.dataset.col);
+  const dx = toCol - fromCol;
+  const dy = toRow - fromRow;
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
 
-function getValidMoves(piece, row, col) {
-  const color = piece.classList.contains('red') ? 'red' : 'black';
-  const moves = [];
-  const dirs = isKing(piece) ? directions.king : directions[color];
-
-  dirs.forEach(([dr, dc]) => {
-    const r = row + dr;
-    const c = col + dc;
-    const target = getCell(r, c);
-    if (target && !getPiece(target)) {
-      moves.push(target);
-    } else {
-      const jumpR = row + dr * 2;
-      const jumpC = col + dc * 2;
-      const jumpCell = getCell(jumpR, jumpC);
-      const midPiece = getPiece(getCell(r, c));
-      if (
-        jumpCell &&
-        !getPiece(jumpCell) &&
-        midPiece &&
-        !midPiece.classList.contains(color)
-      ) {
-        moves.push(jumpCell);
-      }
-    }
-  });
-
-  return moves;
-}
-
-board.addEventListener('click', (e) => {
-  const cell = e.target.closest('.cell');
-  const piece = getPiece(cell);
-
-  if (piece && piece.classList.contains(currentPlayer)) {
-    selectedPiece = { piece, cell };
-    board.querySelectorAll('.cell').forEach(c => c.classList.remove('highlight'));
-    const row = parseInt(cell.dataset.row);
-    const col = parseInt(cell.dataset.col);
-    getValidMoves(piece, row, col).forEach(c => c.classList.add('highlight'));
-  } else if (selectedPiece && cell.classList.contains('highlight')) {
-    const fromCell = selectedPiece.cell;
-    const toCell = cell;
-    const piece = selectedPiece.piece;
-
-    const fromRow = parseInt(fromCell.dataset.row);
-    const fromCol = parseInt(fromCell.dataset.col);
-    const toRow = parseInt(toCell.dataset.row);
-    const toCol = parseInt(toCell.dataset.col);
-
-    const dr = toRow - fromRow;
-    const dc = toCol - fromCol;
-
-    if (Math.abs(dr) === 2 && Math.abs(dc) === 2) {
-      const midRow = fromRow + dr / 2;
-      const midCol = fromCol + dc / 2;
-      const midCell = getCell(midRow, midCol);
-      const midPiece = getPiece(midCell);
-      if (midPiece) {
-        midPiece.style.transition = 'opacity 0.3s ease';
-        midPiece.style.opacity = '0';
-        setTimeout(() => midCell.removeChild(midPiece), 300);
-      }
-    }
-
-    piece.classList.add('moving');
-    setTimeout(() => piece.classList.remove('moving'), 300);
-
-    toCell.appendChild(piece);
-    fromCell.innerHTML = '';
-
-    if ((currentPlayer === 'red' && toRow === 0) || (currentPlayer === 'black' && toRow === 7)) {
-      piece.classList.add('king');
-    }
-
-    currentPlayer = currentPlayer === 'red' ? 'black' : 'red';
-    statusText.textContent = `${currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1)}'s turn`;
-    selectedPiece = null;
-    board.querySelectorAll('.cell').forEach(c => c.classList.remove('highlight'));
-
-    if (currentPlayer === 'black') {
-      setTimeout(computerMove, 500);
+  if (absDx === 1 && absDy === 1 && !pieces[`${toRow}-${toCol}`]) {
+    updatePosition(toRow, toCol);
+    switchTurn();
+  } else if (absDx === 2 && absDy === 2) {
+    const midRow = (fromRow + toRow) / 2;
+    const midCol = (fromCol + toCol) / 2;
+    const midPiece = pieces[`${midRow}-${midCol}`];
+    if (midPiece && midPiece.dataset.color !== selected.dataset.color) {
+      getCell(midRow, midCol).removeChild(midPiece);
+      delete pieces[`${midRow}-${midCol}`];
+      updatePosition(toRow, toCol);
+      switchTurn();
     }
   }
-});
+}
+
+function updatePosition(row, col) {
+  getCell(selected.dataset.row, selected.dataset.col).removeChild(selected);
+  selected.dataset.row = row;
+  selected.dataset.col = col;
+  if ((selected.dataset.color === 'black' && row === 0) ||
+      (selected.dataset.color === 'red' && row === 7)) {
+    selected.classList.add('king');
+    selected.dataset.king = 'true';
+  }
+  getCell(row, col).appendChild(selected);
+  pieces[`${row}-${col}`] = selected;
+  delete pieces[`${selected.dataset.row}-${selected.dataset.col}`];
+  selected.classList.remove('selected');
+  selected = null;
+}
+
+function switchTurn() {
+  turn = turn === 'black' ? 'red' : 'black';
+  if (turn === 'red') setTimeout(computerMove, 500);
+}
 
 function computerMove() {
-  const pieces = Array.from(document.querySelectorAll('.piece.black'));
-  let moves = [];
-
-  pieces.forEach(piece => {
-    const cell = piece.parentElement;
-    const row = parseInt(cell.dataset.row);
-    const col = parseInt(cell.dataset.col);
-    const valid = getValidMoves(piece, row, col);
-    valid.forEach(target => {
-      moves.push({ piece, from: cell, to: target });
-    });
-  });
-
-  if (moves.length === 0) {
-    statusText.textContent = "Red wins!";
-    return;
-  }
-
-  const captureMoves = moves.filter(move => {
-    const fr = parseInt(move.from.dataset.row);
-    const fc = parseInt(move.from.dataset.col);
-    const tr = parseInt(move.to.dataset.row);
-    const tc = parseInt(move.to.dataset.col);
-    return Math.abs(tr - fr) === 2;
-  });
-
-  const move = (captureMoves.length > 0 ? captureMoves : moves)[Math.floor(Math.random() * (captureMoves.length > 0 ? captureMoves.length : moves.length))];
-
-  const piece = move.piece;
-  const fromCell = move.from;
-  const toCell = move.to;
-
-  const fromRow = parseInt(fromCell.dataset.row);
-  const fromCol = parseInt(fromCell.dataset.col);
-  const toRow = parseInt(toCell.dataset.row);
-  const toCol = parseInt(toCell.dataset.col);
-
-  const dr = toRow - fromRow;
-  const dc = toCol - fromCol;
-
-  if (Math.abs(dr) === 2 && Math.abs(dc) === 2) {
-    const midRow = fromRow + dr / 2;
-    const midCol = fromCol + dc / 2;
-    const midCell = getCell(midRow, midCol);
-    const midPiece = getPiece(midCell);
-    if (midPiece) {
-      midPiece.style.transition = 'opacity 0.3s ease';
-      midPiece.style.opacity = '0';
-      setTimeout(() => midCell.removeChild(midPiece), 300);
+  const redPieces = Object.values(pieces).filter(p => p.dataset.color === 'red');
+  for (let piece of redPieces) {
+    const row = parseInt(piece.dataset.row);
+    const col = parseInt(piece.dataset.col);
+    const directions = [[1, -1], [1, 1]];
+    for (let [dy, dx] of directions) {
+      const newRow = row + dy;
+      const newCol = col + dx;
+      if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 && !pieces[`${newRow}-${newCol}`]) {
+        selected = piece;
+        movePiece(newRow, newCol);
+        return;
+      }
     }
   }
-
-  piece.classList.add('moving');
-  setTimeout(() => piece.classList.remove('moving'), 300);
-
-  toCell.appendChild(piece);
-  fromCell.innerHTML = '';
-
-  if (toRow === 7) {
-    piece.classList.add('king');
-  }
-
-  currentPlayer = 'red';
-  statusText.textContent = "Red's turn";
+  switchTurn();
 }
 
+board.addEventListener('click', e => {
+  if (!selected || !e.target.classList.contains('cell')) return;
+  const row = parseInt(e.target.dataset.row);
+  const col = parseInt(e.target.dataset.col);
+  movePiece(row, col);
+});
+
 createBoard();
+placePieces();
