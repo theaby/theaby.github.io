@@ -112,8 +112,15 @@ board.addEventListener('click', (e) => {
       const midCol = fromCol + dc / 2;
       const midCell = getCell(midRow, midCol);
       const midPiece = getPiece(midCell);
-      if (midPiece) midCell.removeChild(midPiece);
+      if (midPiece) {
+        midPiece.style.transition = 'opacity 0.3s ease';
+        midPiece.style.opacity = '0';
+        setTimeout(() => midCell.removeChild(midPiece), 300);
+      }
     }
+
+    piece.classList.add('moving');
+    setTimeout(() => piece.classList.remove('moving'), 300);
 
     toCell.appendChild(piece);
     fromCell.innerHTML = '';
@@ -126,7 +133,78 @@ board.addEventListener('click', (e) => {
     statusText.textContent = `${currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1)}'s turn`;
     selectedPiece = null;
     board.querySelectorAll('.cell').forEach(c => c.classList.remove('highlight'));
+
+    if (currentPlayer === 'black') {
+      setTimeout(computerMove, 500);
+    }
   }
 });
+
+function computerMove() {
+  const pieces = Array.from(document.querySelectorAll('.piece.black'));
+  let moves = [];
+
+  pieces.forEach(piece => {
+    const cell = piece.parentElement;
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+    const valid = getValidMoves(piece, row, col);
+    valid.forEach(target => {
+      moves.push({ piece, from: cell, to: target });
+    });
+  });
+
+  if (moves.length === 0) {
+    statusText.textContent = "Red wins!";
+    return;
+  }
+
+  const captureMoves = moves.filter(move => {
+    const fr = parseInt(move.from.dataset.row);
+    const fc = parseInt(move.from.dataset.col);
+    const tr = parseInt(move.to.dataset.row);
+    const tc = parseInt(move.to.dataset.col);
+    return Math.abs(tr - fr) === 2;
+  });
+
+  const move = (captureMoves.length > 0 ? captureMoves : moves)[Math.floor(Math.random() * (captureMoves.length > 0 ? captureMoves.length : moves.length))];
+
+  const piece = move.piece;
+  const fromCell = move.from;
+  const toCell = move.to;
+
+  const fromRow = parseInt(fromCell.dataset.row);
+  const fromCol = parseInt(fromCell.dataset.col);
+  const toRow = parseInt(toCell.dataset.row);
+  const toCol = parseInt(toCell.dataset.col);
+
+  const dr = toRow - fromRow;
+  const dc = toCol - fromCol;
+
+  if (Math.abs(dr) === 2 && Math.abs(dc) === 2) {
+    const midRow = fromRow + dr / 2;
+    const midCol = fromCol + dc / 2;
+    const midCell = getCell(midRow, midCol);
+    const midPiece = getPiece(midCell);
+    if (midPiece) {
+      midPiece.style.transition = 'opacity 0.3s ease';
+      midPiece.style.opacity = '0';
+      setTimeout(() => midCell.removeChild(midPiece), 300);
+    }
+  }
+
+  piece.classList.add('moving');
+  setTimeout(() => piece.classList.remove('moving'), 300);
+
+  toCell.appendChild(piece);
+  fromCell.innerHTML = '';
+
+  if (toRow === 7) {
+    piece.classList.add('king');
+  }
+
+  currentPlayer = 'red';
+  statusText.textContent = "Red's turn";
+}
 
 createBoard();
