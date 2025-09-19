@@ -3,11 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Enhanced Calculator</title>
+  <title>Calculator App</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.png" type="image/png">
 </head>
 <body>
+  <div class="app-logo" style="text-align:center; margin-bottom:10px;">
+    <img src="icon.png" alt="App Logo" width="64" height="64">
+  </div>  
   <div class="calculator">
     <div class="display" id="display">0</div>
     <div class="buttons">
@@ -35,7 +39,7 @@
       <button onclick="append('0')">0</button>
       <button onclick="append('.')">.</button>
       <button onclick="calculate()">=</button>
-    </div>
+  </div>
   </div>
 
   <script>
