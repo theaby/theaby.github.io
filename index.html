@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Enhanced Calculator</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
 </head>
 <body>
   <div class="calculator">
@@ -13,23 +13,27 @@
     <div class="buttons">
       <button onclick="append('%')">%</button>
       <button onclick="clearDisplay()">C</button>
-      <button onclick="append('/')">/</button>
-      <button onclick="append('*')">X</button>
+      <button onclick="append('/')">÷</button>
+      <button onclick="append('*')">×</button>
 
       <button onclick="append('7')">7</button>
       <button onclick="append('8')">8</button>
       <button onclick="append('9')">9</button>
-      <button onclick="append('-')">-</button>
+      <button onclick="append('-')">−</button>
 
       <button onclick="append('4')">4</button>
       <button onclick="append('5')">5</button>
       <button onclick="append('6')">6</button>
       <button onclick="append('+')">+</button>
 
-      <button onclick="toggleSign()">+/-</button>
+      <button onclick="append('1')">1</button>
+      <button onclick="append('2')">2</button>
+      <button onclick="append('3')">3</button>
+      <button onclick="toggleSign()">±</button>
+
       <button onclick="append('0')">0</button>
       <button onclick="append('.')">.</button>
-      <button onclick="calculate()">=</button>
+      <button onclick="calculate()" style="grid-column: span 2">=</button>
     </div>
   </div>
 
@@ -50,7 +54,7 @@
 
     function calculate() {
       try {
-        let expression = display.innerText.replace('%', '/100');
+        let expression = display.innerText.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
         display.innerText = eval(expression);
       } catch (error) {
         display.innerText = 'Error';
