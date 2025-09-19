@@ -1,49 +1,60 @@
 body {
-  font-family: sans-serif;
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f4f4;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: #f0f0f0;
 }
-#board {
+
+.calculator {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.display {
+  background-color: #222;
+  color: #fff;
+  font-size: 2em;
+  padding: 20px;
+  text-align: right;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  overflow-x: auto;
+}
+
+.buttons {
   display: grid;
-  grid-template-columns: repeat(8, 60px);
-  grid-template-rows: repeat(8, 60px);
-  border: 2px solid #333;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
 }
-.cell {
-  width: 60px;
-  height: 60px;
-  box-sizing: border-box;
+
+button {
+  padding: 20px;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 8px;
+  background-color: #e0e0e0;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
-.dark {
-  background: #444;
+
+button:hover {
+  background-color: #d0d0d0;
 }
-.light {
-  background: #eee;
-}
-.piece {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin: 5px;
-  transition: transform 0.3s ease, background 0.3s ease;
-  position: relative;
-}
-.red {
-  background: crimson;
-}
-.black {
-  background: black;
-}
-.king::after {
-  content: "👑";
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  font-size: 20px;
-}
-.selected {
-  outline: 3px solid yellow;
+
+@media (max-width: 500px) {
+  .calculator {
+    padding: 15px;
+  }
+
+  button {
+    padding: 15px;
+    font-size: 1em;
+  }
 }
